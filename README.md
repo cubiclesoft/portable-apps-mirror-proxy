@@ -7,6 +7,8 @@ This is similar to Windows Server Update Services (WSUS) but for the Portable Ap
 
 DISCLAIMER:  This software is not produced by nor endorsed by Rare Ideas, LLC nor the development team behind the PortableApps.com(R) platform.  PortableApps.com(R) is [a registered trademark of Rare Ideas, LLC](https://portableapps.com/about/copyrights_and_trademarks) and all rights of that trademark belong to the rights holder.  The phrase "Portable Apps" is not to be construed as nor confused with as using the PortableApps.com(R) trademark by users of this software and its accompanying documentation.  Other than this clarifying legal disclaimer, you subsequently agree that no usage of the aforementioned registered trademark is performed by the software and its accompanying documentation.
 
+![Mirror/Proxy server configuration/activity screenshot](https://user-images.githubusercontent.com/1432111/126655761-86acadea-214b-4a8e-b53c-725478b68bb7.png)
+
 [![Donate](https://cubiclesoft.com/res/donate-shield.png)](https://cubiclesoft.com/donate/) [![Discord](https://img.shields.io/discord/777282089980526602?label=chat&logo=discord)](https://cubiclesoft.com/product-support/github/)
 
 Features
@@ -38,7 +40,9 @@ Run `apps_sync.bat` to perform the second synchronization.  This will take a whi
 
 Run `run_server.bat` to start the main server in debug mode.  Windows Firewall will ask about allowing PHP to access the network.
 
-Visit `http://IPADDRESS:15644/proxy_root_cert.der` in a web browser (replacing `IPADDRESS` with the IP address of the computer to connect to).  When asked, open the file and then click "Install certificate..." to install the generated [MITM proxy server](https://en.wikipedia.org/wiki/Man-in-the-middle_attack) CA certificate as a "Trusted Root Certificate Authority" on the "Local Machine".  Note that Administrator is required to complete this step.
+![CertMgr screenshot showing the installed MITM proxy certificate](https://user-images.githubusercontent.com/1432111/126655773-e0ba9785-1764-4b98-b9b9-38f629520439.png)
+
+Visit `http://IPADDRESS:15644/proxy_root_cert.der` in a web browser (replacing `IPADDRESS` with the IP address of the computer to connect to).  When asked, open the file and then click "Install certificate..." to install the generated [MITM proxy server](https://en.wikipedia.org/wiki/Man-in-the-middle_attack) CA certificate as a "Trusted Root Certificate Authority" on the "Local Machine".  Note that Administrator is required to complete this step.  The installed certificate should appear in CertMgr as seen above.
 
 In the Portable Apps client software "Options" dialog, locate the "Connection" tab.  Select "Manual Proxy Configuration" and point it at the main server's IP address and port.
 
