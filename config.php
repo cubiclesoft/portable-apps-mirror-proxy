@@ -518,6 +518,8 @@
 					// Process the file for an external download if the filename is a magic string.
 					if (strtolower(substr($info[$filekey], -15)) === "_online.paf.exe" && file_exists($config["storage_dir"] . "/" . $info[$filekey]))
 					{
+						if (!$suppressoutput)  echo "Processing '" . $config["storage_dir"] . "/" . $info[$filekey] . "'...\n";
+
 						require_once $rootpath . "/support/win_pe_file.php";
 
 						$srcfile = $config["storage_dir"] . "/" . $info[$filekey];
@@ -545,14 +547,29 @@
 										$url = $strs["PortableApps.comDownloadURL"];
 										$url2 = HTTP::ExtractURL($url);
 
+										if (($pos = strrpos($url, "%2F")) !== false)  $filename = substr($url, $pos + 3);
+										else if (($pos = strrpos($url, "/")) !== false)  $filename = substr($url, $pos + 1);
+										else  $filename = false;
+
+										if ($filename === false)
+										{
+											CLI::DisplayError("Unable to determine filename from '" . $url . "' (" . $appkey . ").", false, false);
+
+											$failed = true;
+
+											break;
+										}
+
 										$domains[$url2["host"]] = true;
 
 										// If a file has already been downloaded that matches the hash, then skip it.
-										if (isset($verfilemap[$appkey]) && isset($verfilemap[$appkey]["Online_" . $hashkey]) && $strs["PortableApps.comDownloadMD5"] === $verfilemap[$appkey]["Online_" . $hashkey])
+										if (file_exists($config["storage_dir"] . "/" . $filename) && hash_file("md5", $config["storage_dir"] . "/" . $filename) === strtolower($strs["PortableApps.comDownloadMD5"]))
 										{
-											$info["Online_" . $filekey] = $verfilemap[$appkey]["Online_" . $filekey];
-											$info["OnlineURL_" . $filekey] = $verfilemap[$appkey]["OnlineURL_" . $filekey];
-											$info["Online_" . $hashkey] = $verfilemap[$appkey]["Online_" . $hashkey];
+											$info["Online_" . $filekey] = $filename;
+											$info["OnlineURL_" . $filekey] = $url;
+											$info["Online_" . $hashkey] = $strs["PortableApps.comDownloadMD5"];
+
+											$found = true;
 
 											break;
 										}
@@ -585,21 +602,14 @@
 
 											$failed = true;
 										}
+										else if (hash_file("md5", $tempfile) !== strtolower($strs["PortableApps.comDownloadMD5"]))
+										{
+											CLI::DisplayError("An error occurred while downloading '" . $url . "' (" . $appkey . ").  The hash of the retrieved file does not match.", false, false);
+
+											$failed = true;
+										}
 										else
 										{
-											if (($pos = strrpos($url, "%2F")) !== false)  $filename = substr($url, $pos + 3);
-											else if (($pos = strrpos($url, "/")) !== false)  $filename = substr($url, $pos + 1);
-											else  $filename = false;
-
-											if ($filename === false)
-											{
-												CLI::DisplayError("Unable to determine filename from '" . $url . "' (" . $appkey . ").", false, false);
-
-												$failed = true;
-
-												break;
-											}
-
 											if (!$suppressoutput)  echo "Copying to '" . $config["storage_dir"] . "/" . $filename . "'...";
 
 											copy($tempfile, $config["storage_dir"] . "/" . $filename);
@@ -611,10 +621,19 @@
 											$info["Online_" . $hashkey] = $strs["PortableApps.comDownloadMD5"];
 
 											$finalresult["files"][] = $config["storage_dir"] . "/" . $filename;
+
+											$found = true;
 										}
 
 										break;
 									}
+								}
+
+								if (!$found)
+								{
+									CLI::DisplayError("Didn't find a matching string table entry in the resources.", false, false);
+
+									var_dump($result["entry"]["string_file_info"]["string_tables"]);
 								}
 
 								@unlink($tempfile);
