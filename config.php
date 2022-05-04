@@ -386,7 +386,7 @@
 				$info2 = array();
 				foreach ($info as $key => $val)
 				{
-					if (substr($key, 0, 12) === "DownloadFile" || substr($key, 0, 4) === "Hash")  continue;
+					if (substr($key, 0, 12) === "DownloadFile" || substr($key, 0, 4) === "Hash" || substr($key, 0, 11) === "UpdateFrom-")  continue;
 
 					$info2[$key] = $val;
 				}
