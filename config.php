@@ -1,6 +1,6 @@
 <?php
 	// Portable Apps mirror/proxy configuration tool.
-	// (C) 2021 CubicleSoft.  All Rights Reserved.
+	// (C) 2022 CubicleSoft.  All Rights Reserved.
 
 	if (!isset($_SERVER["argc"]) || !$_SERVER["argc"])
 	{
@@ -542,91 +542,106 @@
 								$found = false;
 								foreach ($result["entry"]["string_file_info"]["string_tables"] as $strs)
 								{
-									if (isset($strs["PortableApps.comDownloadMD5"]) && isset($strs["PortableApps.comDownloadURL"]))
+									$pnum = 1;
+									$onlinemd5key = "PortableApps.comDownloadMD5";
+									$onlineurlkey = "PortableApps.comDownloadURL";
+									$onlineknockurlkey = "PortableApps.comDownloadKnockURL";
+
+									$infoprefix = "Online_";
+									$infourlprefix = "OnlineURL_";
+
+									while (isset($strs[$onlinemd5key]) && isset($strs[$onlineurlkey]))
 									{
-										$url = $strs["PortableApps.comDownloadURL"];
+										$url = $strs[$onlineurlkey];
 										$url2 = HTTP::ExtractURL($url);
 
-										if (($pos = strrpos($url, "%2F")) !== false)  $filename = substr($url, $pos + 3);
-										else if (($pos = strrpos($url, "/")) !== false)  $filename = substr($url, $pos + 1);
-										else  $filename = false;
+										$filename = hash("md5", $url);
 
-										if ($filename === false)
-										{
-											CLI::DisplayError("Unable to determine filename from '" . $url . "' (" . $appkey . ").", false, false);
-
-											$failed = true;
-
-											break;
-										}
+										if (($pos = strrpos($url, "%2F")) !== false)  $filename .= "." . substr($url, $pos + 3);
+										else if (($pos = strrpos($url, "/")) !== false)  $filename .= "." . substr($url, $pos + 1);
 
 										$domains[$url2["host"]] = true;
 
 										// If a file has already been downloaded that matches the hash, then skip it.
-										if (file_exists($config["storage_dir"] . "/" . $filename) && hash_file("md5", $config["storage_dir"] . "/" . $filename) === strtolower($strs["PortableApps.comDownloadMD5"]))
+										if (file_exists($config["storage_dir"] . "/" . $filename) && hash_file("md5", $config["storage_dir"] . "/" . $filename) === strtolower($strs[$onlinemd5key]))
 										{
-											$info["Online_" . $filekey] = $filename;
-											$info["OnlineURL_" . $filekey] = $url;
-											$info["Online_" . $hashkey] = $strs["PortableApps.comDownloadMD5"];
+											$info[$infoprefix . $filekey] = $filename;
+											$info[$infourlprefix . $filekey] = $url;
+											$info[$infoprefix . $hashkey] = $strs[$onlinemd5key];
 
 											$found = true;
-
-											break;
-										}
-
-										// Knock on the door to allow the download.  Supposedly not used though by any app.
-										if (isset($strs["PortableApps.comDownloadKnockURL"]) && substr($strs["PortableApps.comDownloadKnockURL"], 0, 2) !== "\${")  // }
-										{
-											$web = new WebBrowser();
-											$web->Process($strs["PortableApps.comDownloadKnockURL"], $options);
-										}
-
-										// Download the file.
-										if (!$suppressoutput)  echo "Downloading '" . $url . "' (" . $info["DownloadSize"] . "MB)...";
-
-										$fp = fopen($tempfile, "wb");
-
-										$options["read_body_callback"] = "AppsSync_DownloadFileCallback";
-										$options["read_body_callback_opts"] = $fp;
-
-										$web = new WebBrowser();
-										$result2 = $web->Process($url, $options);
-
-										fclose($fp);
-
-										if (!$suppressoutput)  echo "Done.\n";
-
-										if (!$result2["success"] || $result2["response"]["code"] != 200)
-										{
-											CLI::DisplayError("An error occurred while downloading '" . $url . "' (" . $appkey . ").", $result2, false);
-
-											$failed = true;
-										}
-										else if (hash_file("md5", $tempfile) !== strtolower($strs["PortableApps.comDownloadMD5"]))
-										{
-											CLI::DisplayError("An error occurred while downloading '" . $url . "' (" . $appkey . ").  The hash of the retrieved file does not match.", false, false);
-
-											$failed = true;
 										}
 										else
 										{
-											if (!$suppressoutput)  echo "Copying to '" . $config["storage_dir"] . "/" . $filename . "'...";
+											// Knock on the door to allow the download.  Supposedly not used though by any app.
+											if (isset($strs[$onlineknockurlkey]) && substr($strs[$onlineknockurlkey], 0, 2) !== "\${")  // }
+											{
+												$web = new WebBrowser();
+												$web->Process($strs[$onlineknockurlkey], $options);
+											}
 
-											copy($tempfile, $config["storage_dir"] . "/" . $filename);
+											// Download the file.
+											if (!$suppressoutput)  echo "Downloading '" . $url . "' (" . $info["DownloadSize"] . "MB)...";
+
+											$fp = fopen($tempfile, "wb");
+
+											$options["read_body_callback"] = "AppsSync_DownloadFileCallback";
+											$options["read_body_callback_opts"] = $fp;
+
+											$web = new WebBrowser();
+											$result2 = $web->Process($url, $options);
+
+											fclose($fp);
 
 											if (!$suppressoutput)  echo "Done.\n";
 
-											$info["Online_" . $filekey] = $filename;
-											$info["OnlineURL_" . $filekey] = $url;
-											$info["Online_" . $hashkey] = $strs["PortableApps.comDownloadMD5"];
+											if (!$result2["success"] || $result2["response"]["code"] != 200)
+											{
+												CLI::DisplayError("An error occurred while downloading '" . $url . "' (" . $appkey . ").", $result2, false);
 
-											$finalresult["files"][] = $config["storage_dir"] . "/" . $filename;
+												$failed = true;
+											}
+											else if (hash_file("md5", $tempfile) !== strtolower($strs[$onlinemd5key]))
+											{
+												CLI::DisplayError("An error occurred while downloading '" . $url . "' (" . $appkey . ").  The hash of the retrieved file does not match.", false, false);
 
-											$found = true;
+												$failed = true;
+											}
+											else
+											{
+												if (isset($verfilemap[$appkey]) && isset($verfilemap[$appkey][$infoprefix . $filekey]) && file_exists($config["storage_dir"] . "/" . $verfilemap[$appkey][$infoprefix . $filekey]))
+												{
+													if (!$suppressoutput)  echo "Deleting '" . $config["storage_dir"] . "/" . $verfilemap[$appkey][$infoprefix . $filekey] . "'.\n";
+
+													@unlink($config["storage_dir"] . "/" . $verfilemap[$appkey][$infoprefix . $filekey]);
+												}
+
+												if (!$suppressoutput)  echo "Copying to '" . $config["storage_dir"] . "/" . $filename . "'...";
+
+												copy($tempfile, $config["storage_dir"] . "/" . $filename);
+
+												if (!$suppressoutput)  echo "Done.\n";
+
+												$info[$infoprefix . $filekey] = $filename;
+												$info[$infourlprefix . $filekey] = $url;
+												$info[$infoprefix . $hashkey] = $strs[$onlinemd5key];
+
+												$finalresult["files"][] = $config["storage_dir"] . "/" . $filename;
+
+												$found = true;
+											}
 										}
 
-										break;
+										$pnum++;
+										$onlinemd5key = "PortableApps.comDownload" . $pnum . "MD5";
+										$onlineurlkey = "PortableApps.comDownload" . $pnum . "URL";
+										$onlineknockurlkey = "PortableApps.comDownload" . $pnum . "KnockURL";
+
+										$infoprefix = "Online" . $pnum . "_";
+										$infourlprefix = "OnlineURL" . $pnum . "_";
 									}
+
+									if ($found || $failed)  break;
 								}
 
 								if (!$found)
@@ -651,7 +666,12 @@
 					{
 						foreach ($verfilemap[$appkey] as $key => $val)
 						{
-							if (substr($key, 0, 12) === "DownloadFile" || substr($key, 0, 19) === "Online_DownloadFile")  @unlink($config["storage_dir"] . "/" . $val);
+							if (substr($key, 0, 12) === "DownloadFile")
+							{
+								if (!$suppressoutput)  echo "Deleting '" . $config["storage_dir"] . "/" . $val . "'.\n";
+
+								@unlink($config["storage_dir"] . "/" . $val);
+							}
 						}
 					}
 
@@ -667,9 +687,11 @@
 			{
 				if (!isset($appkeys[$appkey]))
 				{
+					if (!$suppressoutput)  echo "Removing " . $appkey . " files.\n";
+
 					foreach ($info as $key => $val)
 					{
-						if (substr($key, 0, 12) === "DownloadFile")  @unlink($config["storage_dir"] . "/" . $val);
+						if (substr($key, 0, 12) === "DownloadFile" || (substr($key, 0, 6) === "Online" && strpos($key, "DownloadFile") !== false))  @unlink($config["storage_dir"] . "/" . $val);
 					}
 
 					unset($verfilemap[$appkey]);

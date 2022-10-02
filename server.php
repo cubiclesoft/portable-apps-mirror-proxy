@@ -1,6 +1,6 @@
 <?php
 	// Portable Apps mirror/proxy server.
-	// (C) 2021 CubicleSoft.  All Rights Reserved.
+	// (C) 2022 CubicleSoft.  All Rights Reserved.
 
 	if (!isset($_SERVER["argc"]) || !$_SERVER["argc"])
 	{
@@ -315,6 +315,8 @@
 						else if (isset($client->appdata["url"]["queryvars"]["f"]) && isset($filesavail[$client->appdata["url"]["queryvars"]["f"][0]]))  $client->appdata["file"] = array("name" => $config["storage_dir"] . "/" . $client->appdata["url"]["queryvars"]["f"][0]);
 						else if (($pos = strrpos($client->url, "%2F")) !== false && isset($filesavail[substr($client->url, $pos + 3)]))  $client->appdata["file"] = array("name" => $config["storage_dir"] . "/" . substr($client->url, $pos + 3));
 						else if (($pos = strrpos($client->url, "/")) !== false && isset($filesavail[substr($client->url, $pos + 1)]))  $client->appdata["file"] = array("name" => $config["storage_dir"] . "/" . substr($client->url, $pos + 1));
+						else if (($pos = strrpos($client->url, "%2F")) !== false && isset($filesavail[hash("md5", $client->url) . "." . substr($client->url, $pos + 3)]))  $client->appdata["file"] = array("name" => $config["storage_dir"] . "/" . hash("md5", $client->url) . "." . substr($client->url, $pos + 3));
+						else if (($pos = strrpos($client->url, "/")) !== false && isset($filesavail[hash("md5", $client->url) . "." . substr($client->url, $pos + 1)]))  $client->appdata["file"] = array("name" => $config["storage_dir"] . "/" . hash("md5", $client->url) . "." . substr($client->url, $pos + 1));
 					}
 				}
 
