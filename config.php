@@ -453,7 +453,7 @@
 
 						if (!$result["success"] || $result["response"]["code"] != 200)
 						{
-							CLI::DisplayError("An error occurred while downloading '" . $appkey . "' (" . $url . ").", $result, false);
+							CLI::DisplayError("An error occurred while downloading '" . $url . "' (" . $appkey . ").", $result, false);
 
 							$failed = true;
 
@@ -494,11 +494,17 @@
 
 							if (!$result["success"] || $result["response"]["code"] != 200)
 							{
-								CLI::DisplayError("An error occurred while downloading '" . $appkey . "' (" . $url . ").", $result, false);
+								CLI::DisplayError("An error occurred while downloading '" . $url . "' (" . $appkey . ").", $result, false);
 
 								$failed = true;
 
 								break;
+							}
+							else if (hash_file("md5", $tempfile) !== strtolower($info2[$hashkey]) && hash_file("sha256", $tempfile) !== strtolower($info2[$hashkey]))
+							{
+								CLI::DisplayError("An error occurred while downloading '" . $url . "' (" . $appkey . ").  The hash of the retrieved file does not match.", false, false);
+
+								$failed = true;
 							}
 							else
 							{
