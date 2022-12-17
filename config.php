@@ -315,7 +315,7 @@
 				)
 			);
 
-			$url = "http://portableapps.com/updater/update.php";
+			$url = "https://portableapps.com/updater/update.php";
 
 			$result = $web->Process($url, $options);
 			if (!$result["success"] || $result["response"]["code"] != 200)  CLI::DisplayError("An error occurred while retrieving update information.", $result);
@@ -416,7 +416,7 @@
 					$info[$filekey] = str_replace(array("\\", "/"), "", $info[$filekey]);
 
 					$info2[$filekey] = $info[$filekey];
-					$info2[$hashkey] = $info[$hashkey];
+					$info2[$hashkey] = (isset($info[$hashkey . "256"]) ? $info[$hashkey . "256"] : $info[$hashkey]);
 
 					if (!isset($info2["DownloadFile"]))
 					{
