@@ -169,8 +169,10 @@
 	$path = sys_get_temp_dir();
 	$path = str_replace("\\", "/", $path);
 	if (substr($path, -1) !== "/")  $path .= "/";
+	$path .= "php_portable_apps_proxy/";
+	mkdir($path, 750, true);
 
-	$filename = $path . "php_portable_apps_proxy_access.log";
+	$filename = $path . "access.log";
 	if (file_exists($filename) && filesize($filename) > 10000000)  @unlink($filename);
 	$accessfp = fopen($filename, "ab");
 
@@ -315,6 +317,8 @@
 						else if (isset($client->appdata["url"]["queryvars"]["f"]) && isset($filesavail[$client->appdata["url"]["queryvars"]["f"][0]]))  $client->appdata["file"] = array("name" => $config["storage_dir"] . "/" . $client->appdata["url"]["queryvars"]["f"][0]);
 						else if (($pos = strrpos($client->url, "%2F")) !== false && isset($filesavail[substr($client->url, $pos + 3)]))  $client->appdata["file"] = array("name" => $config["storage_dir"] . "/" . substr($client->url, $pos + 3));
 						else if (($pos = strrpos($client->url, "/")) !== false && isset($filesavail[substr($client->url, $pos + 1)]))  $client->appdata["file"] = array("name" => $config["storage_dir"] . "/" . substr($client->url, $pos + 1));
+						else if (($pos = strrpos($client->url, "%2F")) !== false && isset($filesavail[hash("sha256", $client->url) . "." . substr($client->url, $pos + 3)]))  $client->appdata["file"] = array("name" => $config["storage_dir"] . "/" . hash("sha256", $client->url) . "." . substr($client->url, $pos + 3));
+						else if (($pos = strrpos($client->url, "/")) !== false && isset($filesavail[hash("sha256", $client->url) . "." . substr($client->url, $pos + 1)]))  $client->appdata["file"] = array("name" => $config["storage_dir"] . "/" . hash("sha256", $client->url) . "." . substr($client->url, $pos + 1));
 						else if (($pos = strrpos($client->url, "%2F")) !== false && isset($filesavail[hash("md5", $client->url) . "." . substr($client->url, $pos + 3)]))  $client->appdata["file"] = array("name" => $config["storage_dir"] . "/" . hash("md5", $client->url) . "." . substr($client->url, $pos + 3));
 						else if (($pos = strrpos($client->url, "/")) !== false && isset($filesavail[hash("md5", $client->url) . "." . substr($client->url, $pos + 1)]))  $client->appdata["file"] = array("name" => $config["storage_dir"] . "/" . hash("md5", $client->url) . "." . substr($client->url, $pos + 1));
 					}

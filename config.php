@@ -1,6 +1,6 @@
 <?php
 	// Portable Apps mirror/proxy configuration tool.
-	// (C) 2022 CubicleSoft.  All Rights Reserved.
+	// (C) 2024 CubicleSoft.  All Rights Reserved.
 
 	if (!isset($_SERVER["argc"]) || !$_SERVER["argc"])
 	{
@@ -549,19 +549,19 @@
 								foreach ($result["entry"]["string_file_info"]["string_tables"] as $strs)
 								{
 									$pnum = 1;
-									$onlinemd5key = "PortableApps.comDownloadMD5";
+									$onlinesha256key = "PortableApps.comDownloadSHA256";
 									$onlineurlkey = "PortableApps.comDownloadURL";
 									$onlineknockurlkey = "PortableApps.comDownloadKnockURL";
 
 									$infoprefix = "Online_";
 									$infourlprefix = "OnlineURL_";
 
-									while (isset($strs[$onlinemd5key]) && isset($strs[$onlineurlkey]))
+									while (isset($strs[$onlinesha256key]) && isset($strs[$onlineurlkey]))
 									{
 										$url = $strs[$onlineurlkey];
 										$url2 = HTTP::ExtractURL($url);
 
-										$filename = hash("md5", $url);
+										$filename = hash("sha256", $url);
 
 										if (($pos = strrpos($url, "%2F")) !== false)  $filename .= "." . substr($url, $pos + 3);
 										else if (($pos = strrpos($url, "/")) !== false)  $filename .= "." . substr($url, $pos + 1);
@@ -569,11 +569,11 @@
 										$domains[$url2["host"]] = true;
 
 										// If a file has already been downloaded that matches the hash, then skip it.
-										if (file_exists($config["storage_dir"] . "/" . $filename) && hash_file("md5", $config["storage_dir"] . "/" . $filename) === strtolower($strs[$onlinemd5key]))
+										if (file_exists($config["storage_dir"] . "/" . $filename) && hash_file("sha256", $config["storage_dir"] . "/" . $filename) === strtolower($strs[$onlinesha256key]))
 										{
 											$info[$infoprefix . $filekey] = $filename;
 											$info[$infourlprefix . $filekey] = $url;
-											$info[$infoprefix . $hashkey] = $strs[$onlinemd5key];
+											$info[$infoprefix . $hashkey] = $strs[$onlinesha256key];
 
 											$found = true;
 										}
@@ -607,7 +607,7 @@
 
 												$failed = true;
 											}
-											else if (hash_file("md5", $tempfile) !== strtolower($strs[$onlinemd5key]))
+											else if (hash_file("sha256", $tempfile) !== strtolower($strs[$onlinesha256key]))
 											{
 												CLI::DisplayError("An error occurred while downloading '" . $url . "' (" . $appkey . ").  The hash of the retrieved file does not match.", false, false);
 
@@ -630,7 +630,7 @@
 
 												$info[$infoprefix . $filekey] = $filename;
 												$info[$infourlprefix . $filekey] = $url;
-												$info[$infoprefix . $hashkey] = $strs[$onlinemd5key];
+												$info[$infoprefix . $hashkey] = $strs[$onlinesha256key];
 
 												$finalresult["files"][] = $config["storage_dir"] . "/" . $filename;
 
@@ -639,7 +639,7 @@
 										}
 
 										$pnum++;
-										$onlinemd5key = "PortableApps.comDownload" . $pnum . "MD5";
+										$onlinesha256key = "PortableApps.comDownload" . $pnum . "SHA256";
 										$onlineurlkey = "PortableApps.comDownload" . $pnum . "URL";
 										$onlineknockurlkey = "PortableApps.comDownload" . $pnum . "KnockURL";
 
