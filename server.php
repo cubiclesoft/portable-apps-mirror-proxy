@@ -1,6 +1,6 @@
 <?php
 	// Portable Apps mirror/proxy server.
-	// (C) 2022 CubicleSoft.  All Rights Reserved.
+	// (C) 2024 CubicleSoft.  All Rights Reserved.
 
 	if (!isset($_SERVER["argc"]) || !$_SERVER["argc"])
 	{
@@ -170,7 +170,7 @@
 	$path = str_replace("\\", "/", $path);
 	if (substr($path, -1) !== "/")  $path .= "/";
 	$path .= "php_portable_apps_proxy/";
-	mkdir($path, 750, true);
+	@mkdir($path, 750, true);
 
 	$filename = $path . "access.log";
 	if (file_exists($filename) && filesize($filename) > 10000000)  @unlink($filename);

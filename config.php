@@ -416,7 +416,9 @@
 					$info[$filekey] = str_replace(array("\\", "/"), "", $info[$filekey]);
 
 					$info2[$filekey] = $info[$filekey];
-					$info2[$hashkey] = (isset($info[$hashkey . "256"]) ? $info[$hashkey . "256"] : $info[$hashkey]);
+					$info2[$hashkey] = $info[$hashkey];
+
+					if (isset($info[$hashkey . "256"]))  $info2[$hashkey . "256"] = $info[$hashkey . "256"];
 
 					if (!isset($info2["DownloadFile"]))
 					{
